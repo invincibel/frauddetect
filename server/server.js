@@ -8,6 +8,7 @@ const app = express();
 var cors = require("cors");
 
 app.use(cors());
+
 //const Buffer = require('buffer')
 
 //const express = require('express');
@@ -96,6 +97,19 @@ const setup = async (req, res, next) => {
   // to declare some path to store your converted image
 
   if (req.body.base64image) {
+    var request = require("request");
+
+var options = { method: 'POST',
+  url: 'http://localhost:8000/imgUpload',
+  qs: { card: req.body.card, img1:req.body.base64image , img2: req.body.base64image1, img3: req.body.base64image2 }
+  };
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
+
     var matches = req.body.base64image.match(
         /^data:([A-Za-z-+\/]+);base64,(.+)$/
       ),
