@@ -1,0 +1,12 @@
+.CardSetupForm_fs_title {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #2c3e50;
+  margin-bottom: 12px;
+}
+.CardSetupForm_fs_subtitle {
+  font-weight: normal;
+  font-size: 10px;
+  color: #3c506e;
+  margin-bottom: 20px;
+}

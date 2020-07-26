@@ -1,0 +1,18 @@
+body {
+  background-color: #f4f5f7;
+  margin: 0;
+}
+
+.Analytics_outer {
+  display: flex;
+  flex-direction: row;
+}
+
+.Analytics_navBar {
+  width: 200px;
+}
+
+.Analytics_main {
+  width: calc(100vw - 200px);
+  left: 200px;
+}

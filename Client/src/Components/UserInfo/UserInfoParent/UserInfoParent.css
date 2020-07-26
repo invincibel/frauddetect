@@ -1,0 +1,45 @@
+.userInfoForm_div {
+  width: 50%;
+  margin-left: 20%;
+  border: 1px 1px 1px;
+  border-style: solid;
+  margin-top: 10%;
+  /* position: absolute; */
+  background-color: white;
+}
+
+.userInfoForm_submit {
+  background-color: #833ac7;
+  color: white;
+  width: 20%;
+  margin-left: 35%;
+  margin-bottom: 6%;
+  font-weight: bold;
+  color: white;
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 10px 5px;
+}
+
+.userInforForm_text {
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  margin-top: 6%;
+  margin-bottom: 6%;
+  width: 70%;
+  margin-left: 10%;
+  box-sizing: border-box;
+  font-family: montserrat;
+  color: #2c3e50;
+  font-size: 13px;
+}
+
+.information_div {
+  margin-left: calc(50% - 20%);
+  margin-top: 3%;
+  width: 40%;
+  margin-bottom: 10%;
+  font-size: 1.2em;
+  position: absolute;
+}
