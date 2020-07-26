@@ -8,7 +8,6 @@ const app = express();
 var cors = require("cors");
 
 app.use(cors());
-
 //const Buffer = require('buffer')
 
 //const express = require('express');
@@ -100,9 +99,8 @@ const setup = async (req, res, next) => {
     var request = require("request");
 
 var options = { method: 'POST',
-  url: 'http://localhost:8000/imgUpload',
-  qs: { card: req.body.card, img1:req.body.base64image , img2: req.body.base64image1, img3: req.body.base64image2 }
-  };
+  url: 'http://localhost:5000/imgUpload',
+  formData: { card: req.body.card, img1: req.body.base64image, img2: req.body.base64image1, img3: req.body.base64image2 } };
 
 request(options, function (error, response, body) {
   if (error) throw new Error(error);
