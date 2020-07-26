@@ -9,27 +9,28 @@ import requests, os, re
 
 app = Flask(__name__)
 
-known_face_encodings = []
-known_face_names = []
-known_faces_filenames = []
-for (dirpath, dirnames, filenames) in os.walk('assets/img/users/'):
-    known_faces_filenames.extend(filenames)
-    break
-for filename in known_faces_filenames:
-    face = face_recognition.load_image_file('assets/img/users/' + filename)
-    person_name=filename.split(".")[0]
-    face_encoding_arr=face_recognition.face_encodings(face)
-    if len(face_encoding_arr)>0:
-        known_face_names.append(person_name)
-        known_face_encodings.append(face_recognition.face_encodings(face)[0])
-face_locations = []
-face_encodings = []
-face_names = []
-process_this_frame = True
+
 
 @app.route('/getName',methods=['GET'])
 def getName():
-    global process_this_frame
+    known_face_encodings = []
+    known_face_names = []
+    known_faces_filenames = []
+    for (dirpath, dirnames, filenames) in os.walk('assets/img/users/'):
+        known_faces_filenames.extend(filenames)
+        break
+    for filename in known_faces_filenames:
+        face = face_recognition.load_image_file('assets/img/users/' + filename)
+        person_name = filename.split(".")[0]
+        face_encoding_arr = face_recognition.face_encodings(face)
+        if len(face_encoding_arr) > 0:
+            known_face_names.append(person_name)
+            known_face_encodings.append(face_recognition.face_encodings(face)[0])
+    face_locations = []
+    face_encodings = []
+    face_names = []
+    process_this_frame = True
+    # global process_this_frame
     fileName=request.args.get('filename')
     # for i in range(5):
     #     video_capture.grab()
