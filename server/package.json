@@ -11,5 +11,10 @@
     "nodemailer": "^6.4.10",
     "request": "^2.88.2",
     "webcam-easy": "^1.0.5"
-  }
+  },
+  "name": "server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "devDependencies": {},
+  "description": ""
 }
