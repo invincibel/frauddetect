@@ -3,11 +3,50 @@ from flask import request
 import sys
 import face_recognition
 import json
+import base64
 import numpy as np
+from flask_cors import CORS
 import cv2, queue, threading, time
 import requests, os, re
+from PIL import Image
+from io import BytesIO
+import re, time, base64
 
 app = Flask(__name__)
+CORS(app)
+
+# def convert_and_save(b64_string):
+#     print(b64_string)
+#     with open("./imageToSave.jpeg", "wb") as fh:
+#         fh.write(base64.b64decode(str(b64_string)))
+#
+#
+#     # fh.close()
+
+def getI420FromBase64(codec,imgPath):
+    base64_data = re.sub('^data:image/.+;base64,', '', codec)
+    byte_data = base64.b64decode(base64_data)
+    image_data = BytesIO(byte_data)
+    img = Image.open(image_data)
+    img.save(imgPath + '.jpeg', "JPEG")
+
+@app.route('/imgUpload', methods=['POST'])
+def upload_base64_file():
+
+    data=request.json
+    if data is None:
+        print("No valid request body, json missing!")
+        return json.dumps({'error': 'No valid request body, json missing!'})
+    else:
+        img_data1 = data['img1']
+        img_data2=data['img2']
+        img_data3=data['img3']
+         # this method convert and save the base64 string to image
+        getI420FromBase64(img_data1,data['card']+"_11")
+        getI420FromBase64(img_data2, data['card'] + "_12")
+        getI420FromBase64(img_data3, data['card'] + "_13")
+    return("ok");
+
 
 
 

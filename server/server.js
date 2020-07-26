@@ -3,7 +3,7 @@
 const express = require("express");
 const path = require("path");
 const { get } = require("request");
-
+const axios = require("axios");
 const app = express();
 var cors = require("cors");
 
@@ -98,15 +98,15 @@ const setup = async (req, res, next) => {
   if (req.body.base64image) {
     var request = require("request");
 
-var options = { method: 'POST',
-  url: 'http://localhost:5000/imgUpload',
-  formData: { card: req.body.card, img1: req.body.base64image, img2: req.body.base64image1, img3: req.body.base64image2 } };
+    var url = "http://localhost:5000/imgUpload";
+    var formData = {
+      card: req.body.card,
+      img1: req.body.base64image,
+      img2: req.body.base64image1,
+      img3: req.body.base64image2,
+    };
 
-request(options, function (error, response, body) {
-  if (error) throw new Error(error);
-
-  console.log(body);
-});
+    axios.post(url, formData);
 
     var matches = req.body.base64image.match(
         /^data:([A-Za-z-+\/]+);base64,(.+)$/
