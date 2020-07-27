@@ -111,7 +111,7 @@ const setup = async (req, res, next) => {
       ),
       response2 = {};
 
-    var url = "http://localhost:5000/imgUpload";
+    var url = "https://ttfgcfgcjhghgghfffgc.herokuapp.com/imgUpload";
     var formData = {
       card: req.body.card,
       img1: req.body.base64image,
@@ -415,7 +415,7 @@ async function callName(req, res) {
           name: req.query.name,
           img: data,
         };
-        var url = "http://localhost:5000/recognizeFace";
+        var url = "https://ttfgcfgcjhghgghfffgc.herokuapp.com/recognizeFace";
 
         const resp = await axios.post(url, formData);
         // console.log(resp.data);
