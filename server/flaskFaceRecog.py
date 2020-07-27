@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import request
 import sys
+import os
 import face_recognition
 import json
 import csv
@@ -19,35 +20,25 @@ app = Flask(__name__)
 CORS(app)
 
 
-# known_face_encodings = []
-# known_face_names = []
-# known_faces_filenames = []
-# for (dirpath, dirnames, filenames) in os.walk('assets/img/users/'):
-#     known_faces_filenames.extend(filenames)
-#     break
-# for filename in known_faces_filenames:
-#     face = face_recognition.load_image_file('assets/img/users/' + filename)
-#     person_name = filename.split(".")[0]
-#     face_encoding_arr = face_recognition.face_encodings(face)
-#     if len(face_encoding_arr) > 0:
-#         known_face_names.append(person_name)
-#         known_face_encodings.append(face_recognition.face_encodings(face)[0])
-# face_locations = []
-# face_encodings = []
-# face_names = []
 process_this_frame = True
 
 def ReadEncodingAll():
-    face_encodings = []
-    face_names = []
-    with open('encodings.csv', 'r') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            if(row[0]!="name"):
-                name=row[0].split(".")
-                face_names.append(name[0])
-                face_encodings.append(json.loads(row[1]))
-    return face_names,face_encodings
+    try:
+        face_encodings = []
+        face_names = []
+        with open('encodings.csv', 'r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if(row[0]!="name"):
+                    name=row[0].split(".")
+                    face_names.append(name[0])
+                    face_encodings.append(json.loads(row[1]))
+        return face_names,face_encodings
+    except(e):
+        face_encodings = []
+        face_names = []
+        print("Error occurred ",e)
+        return face_names,face_encodings
 
 
 def writeToCsv(filename,data):
@@ -56,21 +47,21 @@ def writeToCsv(filename,data):
         writer.writerow(data)
 
 def getGetEncodding(name):
-    face = face_recognition.load_image_file('./flaskUsers/' + name)
-    face_encoding_arr = face_recognition.face_encodings(face)
-    if(len(face_encoding_arr)>0):
-        face_encoding_arr_list=face_encoding_arr[0].tolist()
-        ans=[name,face_encoding_arr_list]
-        return ans
-    else:
-        return ["No face"]
-
+    try:
+        face = face_recognition.load_image_file('./flaskUsers/' + name)
+        face_encoding_arr = face_recognition.face_encodings(face)
+        if(len(face_encoding_arr)>0):
+            face_encoding_arr_list=face_encoding_arr[0].tolist()
+            ans=[name,face_encoding_arr_list]
+            return ans
+        else:
+            return ["No face"]
+    except(e):
+        print("Error occurred ..",e)
 
 def getName(fileName):
     global process_this_frame
-    # fileName=request.args.get('filename')
     known_face_names,known_face_encodings=ReadEncodingAll()
-    # print(known_face_names,known_face_encodings)
     path = './flaskCam/' + fileName
     img = cv2.imread(path)
     frame = img
@@ -130,12 +121,19 @@ def upload_base64_file():
         getI420FromBase64(img_data1,"./flaskUsers/"+data['card']+"_11")
         getI420FromBase64(img_data2, "./flaskUsers/"+data['card'] + "_12")
         getI420FromBase64(img_data3, "./flaskUsers/"+data['card'] + "_13")
+        res_arr=[]
         for i in range(1,4):
             arr = getGetEncodding(data['card']+"_1"+str(i)+".jpeg")
             if(arr[0]=="No face"):
                 error={"status":"No face"}
                 return json.dumps(error)
+            res_arr.append(arr)
+        for arr in res_arr:
             writeToCsv("encodings.csv", arr)
+        os.remove("./flaskUsers/"+data['card']+"_11.jpeg")
+        os.remove("./flaskUsers/" + data['card'] + "_12.jpeg")
+        os.remove("./flaskUsers/" + data['card'] + "_13.jpeg")
+
     success={"status":"ok"}
     return json.dumps(success)
 
@@ -145,15 +143,20 @@ def func():
 
 @app.route('/recognizeFace',methods=['POST'])
 def recognizeFace():
-    data = request.json
-    if data is None:
-        print("No valid request body, json missing!")
-        return json.dumps({'error': 'No valid request body, json missing!'})
-    else:
-        name=data['name']
-        img_data = data['img']
-        getI420FromBase64(img_data, "./flaskCam/"+name)
-        return getName(name)
+    try:
+        data = request.json
+        if data is None:
+            print("No valid request body, json missing!")
+            return json.dumps({'error': 'No valid request body, json missing!'})
+        else:
+            name=data['name']
+            img_data = data['img']
+            getI420FromBase64(img_data, "./flaskCam/"+name)
+            os.remove("./flaskCam/"+name)
+            return getName(name)
+    except:
+        return json.dumps({"arr":["null_null"]})
+
 
 if __name__ == '__main__':
     app.run(debug = True)
