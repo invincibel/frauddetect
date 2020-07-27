@@ -34,7 +34,7 @@ def ReadEncodingAll():
                     face_names.append(name[0])
                     face_encodings.append(json.loads(row[1]))
         return face_names,face_encodings
-    except(e):
+    except Exception as e:
         face_encodings = []
         face_names = []
         print("Error occurred ",e)
@@ -56,8 +56,9 @@ def getGetEncodding(name):
             return ans
         else:
             return ["No face"]
-    except(e):
+    except Exception as e:
         print("Error occurred ..",e)
+
 
 def getName(fileName):
     global process_this_frame
@@ -92,7 +93,7 @@ def getName(fileName):
     ans={"status":"success","arr":best_match_faces}
     return json.dumps(ans)
 
-def getI420FromBase64(codec,imgPath,addExtension=False):
+def getI420FromBase64(codec,imgPath,addExtension=True):
     base64_data = re.sub('^data:image/.+;base64,', '', codec)
     byte_data = base64.b64decode(base64_data)
     image_data = BytesIO(byte_data)
