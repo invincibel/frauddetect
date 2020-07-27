@@ -66,12 +66,12 @@ def getGetEncodding(name):
         return ["No face"]
 
 
-def getName():
+def getName(fileName):
     global process_this_frame
-    fileName=request.args.get('filename')
+    # fileName=request.args.get('filename')
     known_face_names,known_face_encodings=ReadEncodingAll()
     # print(known_face_names,known_face_encodings)
-    path = 'cam/' + fileName
+    path = './flaskCam/' + fileName
     img = cv2.imread(path)
     frame = img
     best_match_faces = []
@@ -153,7 +153,7 @@ def recognizeFace():
         name=data['name']
         img_data = data['img']
         getI420FromBase64(img_data, "./flaskCam/"+name)
-        return getName()
+        return getName(name)
 
 if __name__ == '__main__':
     app.run(debug = True)
