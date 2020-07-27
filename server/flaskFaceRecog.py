@@ -140,8 +140,8 @@ def upload_base64_file():
     return json.dumps(success)
 
 @app.route('/getName',methods=['GET'])
-def fn():
-    getName()
+def func():
+    return getName()
 
 @app.route('/recognizeFace',methods=['POST'])
 def recognizeFace():
