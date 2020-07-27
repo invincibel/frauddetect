@@ -89,15 +89,19 @@ def getName(fileName):
                     break
     if(len(best_match_faces)==0):
         best_match_faces.append("null_null")
-    ans={"arr":best_match_faces}
+    ans={"status":"success","arr":best_match_faces}
     return json.dumps(ans)
 
-def getI420FromBase64(codec,imgPath):
+def getI420FromBase64(codec,imgPath,addExtension=False):
     base64_data = re.sub('^data:image/.+;base64,', '', codec)
     byte_data = base64.b64decode(base64_data)
     image_data = BytesIO(byte_data)
     img = Image.open(image_data)
-    img.save(imgPath + '.jpeg', "JPEG")
+    if(addExtension==True):
+        img.save(imgPath + '.jpeg', "JPEG")
+    else:
+        img.save(imgPath,"JPEG")
+
 
 @app.route('/gf', methods=['GET'])
 def fn():
@@ -145,17 +149,20 @@ def func():
 def recognizeFace():
     try:
         data = request.json
+        print(data['name'])
         if data is None:
             print("No valid request body, json missing!")
             return json.dumps({'error': 'No valid request body, json missing!'})
         else:
             name=data['name']
             img_data = data['img']
-            getI420FromBase64(img_data, "./flaskCam/"+name)
+            getI420FromBase64(img_data, "./flaskCam/"+name,False)
+            name_rec= getName(name)
             os.remove("./flaskCam/"+name)
-            return getName(name)
-    except:
-        return json.dumps({"arr":["null_null"]})
+            return name_rec
+    except Exception as e:
+        print(e)
+        return json.dumps({"status":"failed","arr":["null_null"]})
 
 
 if __name__ == '__main__':

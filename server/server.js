@@ -118,9 +118,11 @@ const setup = async (req, res, next) => {
       img2: req.body.base64image1,
       img3: req.body.base64image2,
     };
-
-    axios.post(url, formData);
-
+    const resp = await axios.post(url, formData);
+    var obj = resp.data;
+    if (obj.status != "ok") {
+      return res.send(resp.data);
+    }
     response.type = matches[1];
     response1.type = matches1[1];
     response2.type = matches2[1];
@@ -391,16 +393,35 @@ function writecsv(req, res) {
   }
 }
 
-function callName(req, res) {
-  console.log("Inside name finder", req.query.name);
+async function callName(req, res) {
+  //console.log("Inside name finder", req.query.name);
   try {
-    var spawn = require("child_process").spawn;
+    console.log(req.query.name);
 
-    var process = spawn("python3", ["./faceRecog.py", req.query.name]);
+    var request = require("request").defaults({ encoding: null });
 
-    process.stdout.on("data", function (data) {
-      console.log("Result is Data");
-      res.send(data.toString());
+    request.get("http://localhost:8000/cam/" + req.query.name, async function (
+      error,
+      response,
+      body
+    ) {
+      if (!error && response.statusCode == 200) {
+        data =
+          "data:" +
+          response.headers["content-type"] +
+          ";base64," +
+          Buffer.from(body).toString("base64");
+        var formData = {
+          name: req.query.name,
+          img: data,
+        };
+        var url = "http://localhost:5000/recognizeFace";
+
+        const resp = await axios.post(url, formData);
+        // console.log(resp.data);
+        //console.log(data);
+        res.send(resp.data);
+      }
     });
   } catch (e) {
     res.send({ status: "failed" });
