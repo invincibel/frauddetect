@@ -3,6 +3,7 @@ from flask import request
 import sys
 import face_recognition
 import json
+import csv
 import base64
 import numpy as np
 from flask_cors import CORS
@@ -11,17 +12,94 @@ import requests, os, re
 from PIL import Image
 from io import BytesIO
 import re, time, base64
+from numpy import asarray
+from numpy import savetxt
 
 app = Flask(__name__)
 CORS(app)
 
-# def convert_and_save(b64_string):
-#     print(b64_string)
-#     with open("./imageToSave.jpeg", "wb") as fh:
-#         fh.write(base64.b64decode(str(b64_string)))
-#
-#
-#     # fh.close()
+
+# known_face_encodings = []
+# known_face_names = []
+# known_faces_filenames = []
+# for (dirpath, dirnames, filenames) in os.walk('assets/img/users/'):
+#     known_faces_filenames.extend(filenames)
+#     break
+# for filename in known_faces_filenames:
+#     face = face_recognition.load_image_file('assets/img/users/' + filename)
+#     person_name = filename.split(".")[0]
+#     face_encoding_arr = face_recognition.face_encodings(face)
+#     if len(face_encoding_arr) > 0:
+#         known_face_names.append(person_name)
+#         known_face_encodings.append(face_recognition.face_encodings(face)[0])
+# face_locations = []
+# face_encodings = []
+# face_names = []
+process_this_frame = True
+
+def ReadEncodingAll():
+    face_encodings = []
+    face_names = []
+    with open('encodings.csv', 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if(row[0]!="name"):
+                name=row[0].split(".")
+                face_names.append(name[0])
+                face_encodings.append(json.loads(row[1]))
+    return face_names,face_encodings
+
+
+def writeToCsv(filename,data):
+    with open(filename, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(data)
+
+def getGetEncodding(name):
+    face = face_recognition.load_image_file('assets/img/users/' + name)
+    face_encoding_arr = face_recognition.face_encodings(face)
+    if(len(face_encoding_arr)>0):
+        face_encoding_arr_list=face_encoding_arr[0].tolist()
+        ans=[name,face_encoding_arr_list]
+        return ans
+    else:
+        return ["No face"]
+
+
+def getName():
+    global process_this_frame
+    fileName=request.args.get('filename')
+    known_face_names,known_face_encodings=ReadEncodingAll()
+    # print(known_face_names,known_face_encodings)
+    path = 'cam/' + fileName
+    img = cv2.imread(path)
+    frame = img
+    best_match_faces = []
+    face_names = ""
+    if process_this_frame:
+        face_locations = face_recognition.face_locations(frame)
+        face_encodings = face_recognition.face_encodings(frame, face_locations)
+        for face_encoding in face_encodings:
+            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+            name = "Unknown"
+            face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+            print(face_distances)
+            best_match_index = np.argmin(face_distances)
+            print(best_match_index,face_distances[best_match_index],matches[best_match_index])
+            while (face_distances[best_match_index] <= 0.52):
+                if (matches[best_match_index]):
+                    best_match_faces.append(known_face_names[best_match_index])
+                face_distances = np.delete(face_distances, best_match_index)
+                known_face_names.pop(best_match_index)
+                matches.pop(best_match_index)
+                if (len(face_distances)):
+                    best_match_index = np.argmin(face_distances)
+                else:
+                    break
+    if(len(best_match_faces)==0):
+        best_match_faces.append("null_null")
+    ans={"arr":best_match_faces}
+    return json.dumps(ans)
 
 def getI420FromBase64(codec,imgPath):
     base64_data = re.sub('^data:image/.+;base64,', '', codec)
@@ -30,9 +108,16 @@ def getI420FromBase64(codec,imgPath):
     img = Image.open(image_data)
     img.save(imgPath + '.jpeg', "JPEG")
 
+@app.route('/gf', methods=['GET'])
+def fn():
+    fileName = request.args.get('filename')
+    arr=getGetEncodding(fileName)
+    writeToCsv("encodings.csv", arr)
+    return("Done")
+
+
 @app.route('/imgUpload', methods=['POST'])
 def upload_base64_file():
-
     data=request.json
     if data is None:
         print("No valid request body, json missing!")
@@ -42,94 +127,33 @@ def upload_base64_file():
         img_data2=data['img2']
         img_data3=data['img3']
          # this method convert and save the base64 string to image
-        getI420FromBase64(img_data1,data['card']+"_11")
-        getI420FromBase64(img_data2, data['card'] + "_12")
-        getI420FromBase64(img_data3, data['card'] + "_13")
-    return("ok");
-
-
-
+        getI420FromBase64(img_data1,"./flaskUsers/"+data['card']+"_11")
+        getI420FromBase64(img_data2, "./flaskUsers/"+data['card'] + "_12")
+        getI420FromBase64(img_data3, "./flaskUsers/"+data['card'] + "_13")
+        for i in range(1,4):
+            arr = getGetEncodding(data['card']+"_1"+str(i)+".jpeg")
+            if(arr[0]=="No face"):
+                error={"status":"No face"}
+                return json.dumps(error)
+            writeToCsv("encodings.csv", arr)
+    success={"status":"ok"}
+    return json.dumps(success)
 
 @app.route('/getName',methods=['GET'])
-def getName():
-    known_face_encodings = []
-    known_face_names = []
-    known_faces_filenames = []
-    for (dirpath, dirnames, filenames) in os.walk('assets/img/users/'):
-        known_faces_filenames.extend(filenames)
-        break
-    for filename in known_faces_filenames:
-        face = face_recognition.load_image_file('assets/img/users/' + filename)
-        person_name = filename.split(".")[0]
-        face_encoding_arr = face_recognition.face_encodings(face)
-        if len(face_encoding_arr) > 0:
-            known_face_names.append(person_name)
-            known_face_encodings.append(face_recognition.face_encodings(face)[0])
-    face_locations = []
-    face_encodings = []
-    face_names = []
-    process_this_frame = True
-    # global process_this_frame
-    fileName=request.args.get('filename')
-    # for i in range(5):
-    #     video_capture.grab()
-    # Grab a single frame of video
-    path = 'cam/' + fileName
-    img = cv2.imread(path)
-    frame = img
-    # # Resize frame of video to 1/4 size for faster face recognition processing
-    # small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-    # print(sys.exc_info())
-    # # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
-    # frame = small_frame[:, :, ::-1]
-    best_match_faces = []
-    # Process every frame only one time
-    face_names = ""
-    if process_this_frame:
-        # Find all the faces and face encodings in the current frame of video
-        face_locations = face_recognition.face_locations(frame)
-        face_encodings = face_recognition.face_encodings(frame, face_locations)
-        # Initialize an array for the name of the detected users
-        # * ---------- Initialyse JSON to EXPORT --------- *
-        json_to_export = {}
-        for face_encoding in face_encodings:
-            # See if the face is a match for the known face(s)
-            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-            name = "Unknown"
-            # # If a match was found in known_face_encodings, just use the first one.
-            # if True in matches:
-            #     first_match_index = matches.index(True)
-            #     name = known_face_names[first_match_index]
-            # Or instead, use the known face with the smallest distance to the new face
-            face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-            best_match_index = np.argmin(face_distances)
-            while (face_distances[best_match_index] <= 0.52):
-                if (matches[best_match_index]):
-                    best_match_faces.append(known_face_names[best_match_index])
-                face_distances = np.delete(face_distances, best_match_index)
-                known_face_names.pop(best_match_index)
-                matches.pop(best_match_index)
-                if (len(face_distances)):
-                    best_match_index = np.argmin(face_distances)
-            # best_match_index = np.argmin(face_distances)
-            # print(best_match_indexes)
-            # for best_match_index in best_match_indexes:
-            #     name = known_face_names[best_match_index]
-            #     known_face_names.pop(best_match_index)
-            #     known_face_encodings.pop(best_match_index)
-            # * ---------- SAVE data to send to the API -------- *
-            # json_to_export['name'] = name
-            # json_to_export['hour'] = f'{time.localtime().tm_hour}:{time.localtime().tm_min}'
-            # json_to_export[
-            #     'date'] = f'{time.localtime().tm_year}-{time.localtime().tm_mon}-{time.localtime().tm_mday}'
-            # json_to_export['picture_array'] = frame.tolist()
-            # * ---------- SEND data to API --------- *
-            # print(json_to_export)
-            # r = requests.post(url='http://127.0.0.1:5000/receive_data', json=json_to_export)
-            # print("Status: ", r.status_code)
-            # face_names=(name)
-    ans={"arr":best_match_faces}
-    return json.dumps(ans)
+def fn():
+    getName()
+
+@app.route('/recognizeFace',methods=['POST'])
+def recognizeFace():
+    data = request.json
+    if data is None:
+        print("No valid request body, json missing!")
+        return json.dumps({'error': 'No valid request body, json missing!'})
+    else:
+        name=data['name']
+        img_data = data['img']
+        getI420FromBase64(img_data, "./flaskCam/"+name)
+        return getName()
 
 if __name__ == '__main__':
     app.run(debug = True)

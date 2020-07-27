@@ -98,16 +98,6 @@ const setup = async (req, res, next) => {
   if (req.body.base64image) {
     var request = require("request");
 
-    var url = "http://localhost:5000/imgUpload";
-    var formData = {
-      card: req.body.card,
-      img1: req.body.base64image,
-      img2: req.body.base64image1,
-      img3: req.body.base64image2,
-    };
-
-    axios.post(url, formData);
-
     var matches = req.body.base64image.match(
         /^data:([A-Za-z-+\/]+);base64,(.+)$/
       ),
@@ -120,6 +110,16 @@ const setup = async (req, res, next) => {
         /^data:([A-Za-z-+\/]+);base64,(.+)$/
       ),
       response2 = {};
+
+    var url = "http://localhost:5000/imgUpload";
+    var formData = {
+      card: req.body.card,
+      img1: req.body.base64image,
+      img2: req.body.base64image1,
+      img3: req.body.base64image2,
+    };
+
+    axios.post(url, formData);
 
     response.type = matches[1];
     response1.type = matches1[1];
