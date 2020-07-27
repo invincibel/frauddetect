@@ -56,7 +56,7 @@ def writeToCsv(filename,data):
         writer.writerow(data)
 
 def getGetEncodding(name):
-    face = face_recognition.load_image_file('assets/img/users/' + name)
+    face = face_recognition.load_image_file('./flaskUsers/' + name)
     face_encoding_arr = face_recognition.face_encodings(face)
     if(len(face_encoding_arr)>0):
         face_encoding_arr_list=face_encoding_arr[0].tolist()
