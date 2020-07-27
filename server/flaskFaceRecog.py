@@ -41,6 +41,7 @@ def ReadEncodingAll():
         return face_names,face_encodings
 
 
+
 def writeToCsv(filename,data):
     with open(filename, 'a', newline='') as file:
         writer = csv.writer(file)
@@ -141,6 +142,20 @@ def upload_base64_file():
 
     success={"status":"ok"}
     return json.dumps(success)
+
+@app.route('/checkWorking')
+def checkWorking():
+    return("Server is on !!!!")
+
+@app.route('/getUsers')
+def getUsers():
+    users=[]
+    with open('encodings.csv', 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if (row[0] != "name"):
+                users.append(row[0])
+    return json.dumps({"Users":users})
 
 @app.route('/getName',methods=['GET'])
 def func():
